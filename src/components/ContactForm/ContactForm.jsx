@@ -1,65 +1,60 @@
-import { useState } from 'react';
-import css from './ContactForm.module.css';
-import PropTypes from 'prop-types';
+import React from 'react';
+import { useForm } from 'react-hook-form';
+import { useDispatch } from 'react-redux';
+import { yupResolver } from '@hookform/resolvers/yup';
+import * as yup from 'yup';
+import {
+  StyledForm,
+  StyledInput,
+  FormButton,
+  ErrorMessage,
+} from './ContactForm.styled.jsx';
+import { addContact } from '../../redux/contactsSlice.js';
 
-export const ContactForm = ({ onSubmit }) => {
-  const [formData, setFormData] = useState({
-    name: '',
-    number: '',
+const schema = yup
+  .object()
+  .shape({
+    name: yup
+      .string()
+      .matches(
+        /^[a-zA-Zа-яА-Я]+(([' -][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$/,
+        "Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
+      )
+      .required('Name is required'),
+    number: yup
+      .string()
+      .matches(
+        /\+?\d{1,4}?[-.\s]?\(?\d{1,3}?\)?[-.\s]?\d{1,4}[-.\s]?\d{1,4}[-.\s]?\d{1,9}/,
+        'Phone number must be digits and can contain spaces, dashes, parentheses and can start with +'
+      )
+      .required('Number is required'),
+  })
+  .required();
+
+export function ContactForm() {
+  const dispatch = useDispatch();
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    reset,
+  } = useForm({
+    defaultValues: { name: '', number: '' },
+    resolver: yupResolver(schema),
   });
 
-  const handleChange = event => {
-    const { name, value } = event.target;
-    setFormData({
-      ...formData,
-      [name]: value,
-    });
-  };
-
-  const handleSubmit = event => {
-    event.preventDefault();
-    onSubmit(formData);
-    setFormData({
-      name: '',
-      number: '',
-    });
+  const onSubmit = ({ name, number }) => {
+    dispatch(addContact({ name, number }));
+    reset();
   };
 
   return (
-    <form className={css.contactForm} onSubmit={handleSubmit}>
-      <label className={css.label}>
-        Name
-        <input
-          type="text"
-          name="name"
-          className={css.input}
-          onChange={handleChange}
-          value={formData.name}
-          pattern="^[a-zA-Zа-яА-Я]+(([' \-][a-zA-Zа-яА-Я ])?[a-zA-Zа-яА-Я]*)*$"
-          title="Name may contain only letters, apostrophe, dash and spaces. For example Adrian, Jacob Mercer, Charles de Batz de Castelmore d'Artagnan"
-          required
-        />
-      </label>
-      <label className={css.label}>
-        Number
-        <input
-          type="tel"
-          name="number"
-          className={css.input}
-          onChange={handleChange}
-          value={formData.number}
-          pattern="\+?\d{1,4}?[ .\-\s]?\(?\d{1,3}?\)?[ .\-\s]?\d{1,4}[ .\-\s]?\d{1,4}[ .\-\s]?\d{1,9}"
-          title="Phone number must be digits and can contain spaces, dashes, parentheses and can start with +"
-          required
-        />
-      </label>
-      <button type="submit" className={css.submitBtn}>
-        Add contact
-      </button>
-    </form>
+    <StyledForm onSubmit={handleSubmit(onSubmit)}>
+      <label htmlFor="name">Name</label>
+      <StyledInput {...register('name')} type="text" id="name" />
+       <label htmlFor="number">Number</label>
+      <StyledInput {...register('number')} type="tel" id="number" />
+       <FormButton type="submit">Add contact</FormButton>
+    </StyledForm>
   );
-};
-
-ContactForm.propTypes = {
-  onSubmit: PropTypes.func.isRequired,
-};
+}
