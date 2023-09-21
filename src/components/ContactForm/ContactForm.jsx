@@ -7,7 +7,6 @@ import {
   StyledForm,
   StyledInput,
   FormButton,
-  ErrorMessage,
 } from './ContactForm.styled.jsx';
 import { addContact } from '../../redux/contactsSlice.js';
 
@@ -36,7 +35,7 @@ export function ContactForm() {
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    /* formState: { errors }, */
     reset,
   } = useForm({
     defaultValues: { name: '', number: '' },
